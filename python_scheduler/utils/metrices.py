@@ -52,3 +52,31 @@ def print_results_table(results):
 
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
+#comparison function
+def compare_algorithms(comparison_data):
+
+    from tabulate import tabulate
+
+    table = []
+
+    for row in comparison_data:
+
+        table.append([
+            row["Algorithm"],
+            f'{row["Average Waiting Time"]:.2f}',
+            f'{row["Average Turnaround Time"]:.2f}',
+            f'{row["Average Response Time"]:.2f}',
+            f'{row["CPU Utilisation"]:.2f}',
+            f'{row["Throughput"]:.2f}'
+        ])
+
+    headers = [
+        "Algorithm",
+        "Avg WT",
+        "Avg TAT",
+        "Avg RT",
+        "CPU %",
+        "Throughput"
+    ]
+
+    print(tabulate(table, headers=headers, tablefmt="grid"))

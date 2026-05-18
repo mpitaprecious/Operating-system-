@@ -4,18 +4,21 @@ import csv
 import argparse
 import random
 
-
+from utils.metrices import (
+    calculate_averages,
+    print_results_table,
+    compare_algorithms
+)
 
 def generate_random_processes(n):
-
     processes = []
 
     for pid in range(1, n + 1):
         process = {
             "pid": pid,
             "arrival_time": random.randint(0, 10),
-            "burst_time": random.randint(1,10),
-            "priority": random.randint(1,5)
+            "burst_time": random.randint(1, 10),
+            "priority": random.randint(1, 5)
 
         }
         processes.append(process)
@@ -65,12 +68,39 @@ parser.add_argument(
     type=str,
     help="CSV input file"
 )
+
+# generating random processes
 parser.add_argument(
     "--random",
     type=int,
     help="Generate random processes"
 
 )
+
+# for adding random algorithm argument
+parser.add_argument(
+    "--algorithm",
+    type=str,
+    choices=["fcfs", "sjf", "priority", "rr"],
+    default="fcfs",
+    help="scheduling algorithm"
+)
+
+#for comparison
+parser.add_argument(
+    "--compare",
+    action="store_true",
+    help="Compare all algorithms"
+)
+
+# quantum argument
+parser.add_argument(
+    "--quantum",
+    type=int,
+    default=12,
+    help="Time quantum for Round Robin"
+)
+
 args = parser.parse_args()
 
 if args.file:
@@ -98,7 +128,52 @@ for process in processes:
     process["started"] = False
     process["response_time"] = 0
 
-results, gantt = round_robin(processes, quantum=2)
+#comparison function
+if args.compare:
+
+    comparison_data = []
+
+    algorithms = {
+        "FCFS": fcfs,
+        "SJF": sjf,
+        "Priority": priority_scheduling
+    }
+
+    for name, algorithm in algorithms.items():
+
+        results = algorithm(processes)
+
+        metrics = calculate_averages(results)
+
+        metrics["Algorithm"] = name
+
+        comparison_data.append(metrics)
+
+    rr_results, _ = round_robin(
+        processes,
+        quantum=args.quantum
+    )
+
+    rr_metrics = calculate_averages(rr_results)
+
+    rr_metrics["Algorithm"] = "Round Robin"
+
+    comparison_data.append(rr_metrics)
+
+    compare_algorithms(comparison_data)
+
+    exit()
+
+gantt = []
+
+if args.algorithm == "fcfs":
+    results = fcfs(processes)
+elif args.algorithm == "sjf":
+    results = sjf(processes)
+elif args.algorithm == "priority":
+    results = priority_scheduling(processes)
+elif args.algorithm == "rr":
+    results, gantt = round_robin(processes, quantum=args.quantum)
 
 print_results_table(results)
 
@@ -108,5 +183,5 @@ summary = calculate_averages(results)
 
 for key, value in summary.items():
     print(f"{key}: {value:.2f}")
-
-draw_gantt_chart(gantt)
+if gantt:
+    draw_gantt_chart(gantt)
