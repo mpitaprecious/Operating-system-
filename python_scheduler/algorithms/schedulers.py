@@ -92,7 +92,8 @@ def sjf(processes):
 
     return completed
 
-#priority scheduling
+
+# priority scheduling
 def priority_scheduling(processes):
     processes = sorted(
         processes,
@@ -172,7 +173,7 @@ def round_robin(processes, quantum=2):
     )
 
     ready_queue = []
-    completed = []
+    results = []
     gantt = []
 
     time = 0
@@ -183,7 +184,7 @@ def round_robin(processes, quantum=2):
         process["remaining_time"] = process["burst_time"]
         process["started"] = False
 
-    while len(completed) < n:
+    while len(results) < n:
 
         while index < n and processes[index]["arrival_time"] <= time:
             ready_queue.append(processes[index])
@@ -229,7 +230,7 @@ def round_robin(processes, quantum=2):
 
             wt = tat - process["burst_time"]
 
-            completed.append({
+            results.append({
                 "pid": process["pid"],
                 "arrival_time": process["arrival_time"],
                 "burst_time": process["burst_time"],
@@ -239,4 +240,4 @@ def round_robin(processes, quantum=2):
                 "response_time": process["response_time"]
             })
 
-    return completed, gantt
+    return results, gantt

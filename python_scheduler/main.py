@@ -2,6 +2,24 @@
 # modularization separating codes
 import csv
 import argparse
+import random
+
+
+
+def generate_random_processes(n):
+
+    processes = []
+
+    for pid in range(1, n + 1):
+        process = {
+            "pid": pid,
+            "arrival_time": random.randint(0, 10),
+            "burst_time": random.randint(1,10),
+            "priority": random.randint(1,5)
+
+        }
+        processes.append(process)
+    return processes
 
 
 def load_processes_from_csv(filename):
@@ -47,13 +65,21 @@ parser.add_argument(
     type=str,
     help="CSV input file"
 )
+parser.add_argument(
+    "--random",
+    type=int,
+    help="Generate random processes"
 
+)
 args = parser.parse_args()
 
 if args.file:
 
     processes = load_processes_from_csv(args.file)
-    print(processes)
+
+elif args.random:
+
+    processes = generate_random_processes(args.random)
 
 else:
 
@@ -72,13 +98,13 @@ for process in processes:
     process["started"] = False
     process["response_time"] = 0
 
-completed, gantt = round_robin(processes, quantum=2)
+results, gantt = round_robin(processes, quantum=2)
 
-print_results_table(completed)
+print_results_table(results)
 
 print("\nSUMMARY METRICS")
 
-summary = calculate_averages(completed)
+summary = calculate_averages(results)
 
 for key, value in summary.items():
     print(f"{key}: {value:.2f}")
