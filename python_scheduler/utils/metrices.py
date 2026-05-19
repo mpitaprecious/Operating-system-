@@ -82,3 +82,24 @@ def compare_algorithms(comparison_data):
     ]
 
     print(tabulate(table, headers=headers, tablefmt="grid"))
+
+def calculate_cpu_utilization(results):
+
+    if not results:
+        return 0
+
+    total_burst = sum(
+        p["burst_time"]
+        for p in results
+    )
+
+    total_time = max(
+        p["completion_time"]
+        for p in results
+    )
+
+    utilization = (
+        total_burst / total_time
+    ) * 100
+
+    return utilization

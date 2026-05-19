@@ -4,6 +4,8 @@ import csv
 import argparse
 import random
 from utils.pcb import ProcessControlBlock
+from utils.report import export_results
+from utils.metrices import calculate_cpu_utilization
 
 open("scheduler.log", "w").close()
 
@@ -42,7 +44,7 @@ def load_processes_from_csv(filename):
 
         for row in reader:
             process = ProcessControlBlock(
-                pid=pid,
+                pid="pid",
                 arrival_time=random.randint(0, 10),
                 burst_time=random.randint(1, 10),
                 priority=random.randint(1, 5)
@@ -58,7 +60,7 @@ def load_processes_from_csv(filename):
 
         )
 
-        # importing from utiles folder
+        # importing from utils folder
         from utils.metrices import (
             calculate_averages,
             print_results_table
@@ -68,8 +70,27 @@ def load_processes_from_csv(filename):
         # importing from visualization folder
         from visualization.gantt import draw_gantt_chart
 
-        # processes in queue to be executed by scheduling
+        # MAIN EXECUTION BLOCK
+    if __name__ == "__main__":
+
+        print("MAIN BLOCK STARTED")
+
         parser = argparse.ArgumentParser()
+
+        parser.add_argument(
+            "--algorithm",
+            type=str,
+            choices=["fcfs", "sjf", "priority", "rr"],
+            default="fcfs",
+            help="Scheduling algorithm"
+        )
+
+        parser.add_argument(
+            "--quantum",
+            type=int,
+            default=2,
+            help="Time quantum for Round Robin"
+        )
 
         parser.add_argument(
             "--file",
@@ -77,43 +98,28 @@ def load_processes_from_csv(filename):
             help="CSV input file"
         )
 
-        # generating random processes
         parser.add_argument(
             "--random",
             type=int,
             help="Generate random processes"
-
         )
 
-        # for adding random algorithm argument
-        parser.add_argument(
-            "--algorithm",
-            type=str,
-            choices=["fcfs", "sjf", "priority", "rr"],
-            default="fcfs",
-            help="scheduling algorithm"
-        )
-
-        # for comparison
         parser.add_argument(
             "--compare",
             action="store_true",
-            help="Compare all algorithms"
-        )
-
-        # quantum argument
-        parser.add_argument(
-            "--quantum",
-            type=int,
-            default=12,
-            help="Time quantum for Round Robin"
+            help="Compare all scheduling algorithms"
         )
 
         args = parser.parse_args()
 
+        # Clear old logs
+        open("scheduler.log", "w").close()
+
+        # Load processes
         if args.file:
 
             processes = load_processes_from_csv(args.file)
+            print(processes)
 
         elif args.random:
 
@@ -122,77 +128,88 @@ def load_processes_from_csv(filename):
         else:
 
             processes = [
-                {"pid": 1, "arrival_time": 0, "burst_time": 5, "priority": 2},
-                {"pid": 2, "arrival_time": 1, "burst_time": 3, "priority": 1},
-                {"pid": 3, "arrival_time": 2, "burst_time": 1, "priority": 5},
+                {"pid": 1, "arrival_time": 0, "burst_time": 5, "priority": 2, "state": "READY"},
+                {"pid": 2, "arrival_time": 1, "burst_time": 3, "priority": 1, "state": "READY"},
+                {"pid": 3, "arrival_time": 2, "burst_time": 8, "priority": 4, "state": "READY"}
             ]
 
-        # printing section for the program
+        # COMPARISON MODE
 
-        print(processes)
+        if args.compare:
 
-        for process in processes:
-            process["remaining_time"] = process["burst_time"]
-            process["started"] = False
-            process["response_time"] = 0
+            comparison_data = []
 
-    processes = [p.to_dict() for p in processes]
+            algorithms = {
+                "FCFS": fcfs,
+                "SJF": sjf,
+                "Priority": priority_scheduling
+            }
 
-    # comparison function
-    if args.compare:
+            for name, algorithm in algorithms.items():
+                results = algorithm(processes)
 
-        comparison_data = []
+                metrics = calculate_averages(results)
 
-        algorithms = {
-            "FCFS": fcfs,
-            "SJF": sjf,
-            "Priority": priority_scheduling
-        }
+                metrics["Algorithm"] = name
 
-        for name, algorithm in algorithms.items():
-            results = algorithm(processes)
+                comparison_data.append(metrics)
 
-            metrics = calculate_averages(results)
+            rr_results, _ = round_robin(
+                processes,
+                args.quantum
+            )
 
-            metrics["Algorithm"] = name
+            rr_metrics = calculate_averages(rr_results)
 
-            comparison_data.append(metrics)
+            rr_metrics["Algorithm"] = "Round Robin"
 
-        rr_results, _ = round_robin(
-            processes,
-            quantum=args.quantum
-        )
+            comparison_data.append(rr_metrics)
 
-        rr_metrics = calculate_averages(rr_results)
+            compare_algorithms(comparison_data)
 
-        rr_metrics["Algorithm"] = "Round Robin"
+            draw_comparison_chart(comparison_data)
 
-        comparison_data.append(rr_metrics)
+        # SINGLE ALGORITHM MODE
 
-        compare_algorithms(comparison_data)
+        else:
 
-        draw_comparison_chart(comparison_data)
+            gantt = []
 
-        exit()
+            if args.algorithm == "fcfs":
 
-    gantt = []
+                results = fcfs(processes)
 
-    if args.algorithm == "fcfs":
-        results = fcfs(processes)
-    elif args.algorithm == "sjf":
-        results = sjf(processes)
-    elif args.algorithm == "priority":
-        results = priority_scheduling(processes)
-    elif args.algorithm == "rr":
-        results, gantt = round_robin(processes, quantum=args.quantum)
+            elif args.algorithm == "sjf":
 
-    print_results_table(results)
+                results = sjf(processes)
 
-    print("\nSUMMARY METRICS")
+            elif args.algorithm == "priority":
 
-    summary = calculate_averages(results)
+                results = priority_scheduling(processes)
 
-    for key, value in summary.items():
-        print(f"{key}: {value:.2f}")
-    if gantt:
-        draw_gantt_chart(gantt)
+            elif args.algorithm == "rr":
+
+                results, gantt = round_robin(
+                    processes,
+                    args.quantum
+                )
+
+            # Print results
+            print_results_table(results)
+            export_results(results)
+
+            # Metrics
+            summary = calculate_averages(results)
+
+            print("\n=== SUMMARY ===")
+
+            for key, value in summary.items():
+                print(f"{key}: {value:.2f}")
+
+            # Draw Gantt chart
+            if gantt:
+                draw_gantt_chart(gantt)
+
+        cpu_util = calculate_cpu_utilization(results)
+
+        print(f"\nCPU Utilization: {cpu_util:.2f}%")

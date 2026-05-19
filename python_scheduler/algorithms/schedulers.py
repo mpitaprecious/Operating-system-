@@ -6,7 +6,6 @@ from utils.logger import log_event
 
 # first come, first served scheduling
 def fcfs(processes):
-
     processes = sorted(
         processes,
         key=lambda x: (x["arrival_time"], x["pid"])
@@ -16,6 +15,7 @@ def fcfs(processes):
     results = []
 
     for process in processes:
+        print("FCFS started")
 
         # CPU idle handling
         if time < process["arrival_time"]:
@@ -59,6 +59,7 @@ def fcfs(processes):
         time = completion
 
     return results
+
 
 # shortest job first scheduling
 def sjf(processes):
@@ -191,7 +192,6 @@ def priority_scheduling(processes):
 
 # round robin scheduling
 def round_robin(processes, quantum=2):
-
     processes = sorted(
         processes,
         key=lambda x: (x["arrival_time"], x["pid"])
@@ -208,16 +208,16 @@ def round_robin(processes, quantum=2):
     remaining = {}
 
     for p in processes:
+        print("RR started")
         remaining[p["pid"]] = p["burst_time"]
 
     while queue or index < len(processes):
 
         # Add arrived processes
         while (
-            index < len(processes)
-            and processes[index]["arrival_time"] <= time
+                index < len(processes)
+                and processes[index]["arrival_time"] <= time
         ):
-
             process = processes[index]
 
             update_process_state(process, "READY")
@@ -264,10 +264,9 @@ def round_robin(processes, quantum=2):
 
         # Add newly arrived processes during execution
         while (
-            index < len(processes)
-            and processes[index]["arrival_time"] <= time
+                index < len(processes)
+                and processes[index]["arrival_time"] <= time
         ):
-
             new_process = processes[index]
 
             update_process_state(new_process, "READY")
@@ -286,18 +285,18 @@ def round_robin(processes, quantum=2):
             completion = time
 
             tat = (
-                completion
-                - process["arrival_time"]
+                    completion
+                    - process["arrival_time"]
             )
 
             wt = (
-                tat
-                - process["burst_time"]
+                    tat
+                    - process["burst_time"]
             )
 
             rt = (
-                start
-                - process["arrival_time"]
+                    start
+                    - process["arrival_time"]
             )
 
             update_process_state(process, "TERMINATED")
