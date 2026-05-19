@@ -37,7 +37,8 @@ def print_results_table(results):
             r["completion_time"],
             r["turnaround_time"],
             r["waiting_time"],
-            r["response_time"]
+            r["response_time"],
+            r["state"]
         ])
 
     headers = [
@@ -47,7 +48,8 @@ def print_results_table(results):
         "Completion",
         "TAT",
         "WT",
-        "RT"
+        "RT",
+        "state"
     ]
 
     print(tabulate(table, headers=headers, tablefmt="grid"))

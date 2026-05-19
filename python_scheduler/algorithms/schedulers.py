@@ -1,5 +1,12 @@
-# first come first serve scheduling
+from collections import deque
+
+from utils.pcb import update_process_state
+from utils.logger import log_event
+
+
+# first come, first served scheduling
 def fcfs(processes):
+
     processes = sorted(
         processes,
         key=lambda x: (x["arrival_time"], x["pid"])
@@ -10,31 +17,48 @@ def fcfs(processes):
 
     for process in processes:
 
+        # CPU idle handling
         if time < process["arrival_time"]:
             time = process["arrival_time"]
 
+        # Process enters RUNNING state
+        update_process_state(process, "RUNNING")
+
+        log_event(
+            f"[TIME {time}] Process {process['pid']} entered RUNNING state"
+        )
+
         start = time
+
         completion = start + process["burst_time"]
 
         tat = completion - process["arrival_time"]
+
         wt = tat - process["burst_time"]
+
         rt = start - process["arrival_time"]
+
+        # Process terminates
+        update_process_state(process, "TERMINATED")
+
+        log_event(
+            f"[TIME {completion}] Process {process['pid']} TERMINATED"
+        )
 
         results.append({
             "pid": process["pid"],
             "arrival_time": process["arrival_time"],
             "burst_time": process["burst_time"],
-            "start_time": start,
             "completion_time": completion,
             "turnaround_time": tat,
             "waiting_time": wt,
-            "response_time": rt
+            "response_time": rt,
+            "state": process["state"]
         })
 
         time = completion
 
     return results
-
 
 # shortest job first scheduling
 def sjf(processes):
@@ -167,68 +191,120 @@ def priority_scheduling(processes):
 
 # round robin scheduling
 def round_robin(processes, quantum=2):
+
     processes = sorted(
         processes,
         key=lambda x: (x["arrival_time"], x["pid"])
     )
 
-    ready_queue = []
-    results = []
-    gantt = []
+    queue = deque()
 
     time = 0
     index = 0
-    n = len(processes)
 
-    for process in processes:
-        process["remaining_time"] = process["burst_time"]
-        process["started"] = False
+    gantt = []
+    results = []
 
-    while len(results) < n:
+    remaining = {}
 
-        while index < n and processes[index]["arrival_time"] <= time:
-            ready_queue.append(processes[index])
+    for p in processes:
+        remaining[p["pid"]] = p["burst_time"]
+
+    while queue or index < len(processes):
+
+        # Add arrived processes
+        while (
+            index < len(processes)
+            and processes[index]["arrival_time"] <= time
+        ):
+
+            process = processes[index]
+
+            update_process_state(process, "READY")
+
+            log_event(
+                f"[TIME {time}] Process {process['pid']} entered READY state"
+            )
+
+            queue.append(process)
+
             index += 1
 
-        if not ready_queue:
+        # CPU idle
+        if not queue:
             time += 1
             continue
 
-        process = ready_queue.pop(0)
+        process = queue.popleft()
 
-        if not process["started"]:
-            process["response_time"] = time - process["arrival_time"]
-            process["started"] = True
+        update_process_state(process, "RUNNING")
 
-        execution_time = min(quantum, process["remaining_time"])
+        log_event(
+            f"[TIME {time}] Process {process['pid']} entered RUNNING state"
+        )
 
         start = time
-        time += execution_time
 
-        gantt.append((
-            process["pid"],
-            start,
-            time
+        execute = min(
+            quantum,
+            remaining[process["pid"]]
+        )
 
-        ))
+        time += execute
 
-        process["remaining_time"] -= execution_time
+        remaining[process["pid"]] -= execute
 
-        while index < n and processes[index]["arrival_time"] <= time:
-            ready_queue.append(processes[index])
+        gantt.append(
+            (
+                process["pid"],
+                start,
+                time
+            )
+        )
+
+        # Add newly arrived processes during execution
+        while (
+            index < len(processes)
+            and processes[index]["arrival_time"] <= time
+        ):
+
+            new_process = processes[index]
+
+            update_process_state(new_process, "READY")
+
+            log_event(
+                f"[TIME {time}] Process {new_process['pid']} entered READY state"
+            )
+
+            queue.append(new_process)
+
             index += 1
 
-        if process["remaining_time"] > 0:
-
-            ready_queue.append(process)
-
-        else:
+        # Process completed
+        if remaining[process["pid"]] == 0:
 
             completion = time
 
-            tat = completion - process["arrival_time"]
+            tat = (
+                completion
+                - process["arrival_time"]
+            )
 
-            wt = tat - process["burst_time"]
+            wt = (
+                tat
+                - process["burst_time"]
+            )
+
+            rt = (
+                start
+                - process["arrival_time"]
+            )
+
+            update_process_state(process, "TERMINATED")
+
+            log_event(
+                f"[TIME {time}] Process {process['pid']} TERMINATED"
+            )
 
             results.append({
                 "pid": process["pid"],
@@ -237,7 +313,18 @@ def round_robin(processes, quantum=2):
                 "completion_time": completion,
                 "turnaround_time": tat,
                 "waiting_time": wt,
-                "response_time": process["response_time"]
+                "response_time": rt,
+                "state": process["state"]
             })
+
+        else:
+
+            update_process_state(process, "READY")
+
+            log_event(
+                f"[TIME {time}] Process {process['pid']} returned to READY state"
+            )
+
+            queue.append(process)
 
     return results, gantt
