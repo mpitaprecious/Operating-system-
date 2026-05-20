@@ -4,6 +4,7 @@
 import csv
 import argparse
 import random
+import os
 
 from utils.pcb import ProcessControlBlock
 from utils.report import export_results
@@ -54,10 +55,12 @@ def generate_random_processes(n):
 
 # LOAD CSV FILE
 def load_processes_from_csv(filename):
+    base_dir = os.path.dirname(__file__)
+    full_path = os.path.join(base_dir, filename)
 
     processes = []
 
-    with open(filename, "r") as file:
+    with open(full_path, "r") as file:
 
         reader = csv.DictReader(file)
 
@@ -149,22 +152,22 @@ if __name__ == "__main__":
 
             results = algorithm(processes)
 
-            metrics = calculate_averages(results)
+            metrices = calculate_averages(results)
 
-            metrics["Algorithm"] = name
+            metrices["Algorithm"] = name
 
-            comparison_data.append(metrics)
+            comparison_data.append(metrices)
 
         rr_results, _ = round_robin(
             processes,
             args.quantum
         )
 
-        rr_metrics = calculate_averages(rr_results)
+        rr_metrices = calculate_averages(rr_results)
 
-        rr_metrics["Algorithm"] = "Round Robin"
+        rr_metrices["Algorithm"] = "Round Robin"
 
-        comparison_data.append(rr_metrics)
+        comparison_data.append(rr_metrices)
 
         compare_algorithms(comparison_data)
 

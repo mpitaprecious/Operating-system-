@@ -56,7 +56,7 @@ def draw_gantt_chart(gantt):
 # comparison_visualizer
 def draw_comparison_chart(comparison_data):
 
-    import matplotlib.pyplot as plt
+
 
     algorithms = [
         row["Algorithm"]
