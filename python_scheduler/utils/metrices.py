@@ -1,8 +1,16 @@
 from tabulate import tabulate
 
+
 # finding the average between processes
 def calculate_averages(results):
     n = len(results)
+    if n == 0:
+        return {
+            "avg_waiting_time": 0,
+            "avg_turnaround_time": 0,
+            "avg_response_time": 0
+
+        }
 
     avg_wt = sum(r["waiting_time"] for r in results) / n
     avg_tat = sum(r["turnaround_time"] for r in results) / n
@@ -54,15 +62,14 @@ def print_results_table(results):
 
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-#comparison function
-def compare_algorithms(comparison_data):
 
+# comparison function
+def compare_algorithms(comparison_data):
     from tabulate import tabulate
 
     table = []
 
     for row in comparison_data:
-
         table.append([
             row["Algorithm"],
             f'{row["Average Waiting Time"]:.2f}',
@@ -83,8 +90,8 @@ def compare_algorithms(comparison_data):
 
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-def calculate_cpu_utilization(results):
 
+def calculate_cpu_utilization(results):
     if not results:
         return 0
 
@@ -99,7 +106,49 @@ def calculate_cpu_utilization(results):
     )
 
     utilization = (
-        total_burst / total_time
-    ) * 100
+                          total_burst / total_time
+                  ) * 100
 
     return utilization
+
+
+def calculate_throughput(results):
+    if not results:
+        return 0
+
+    completed_processes = len(results)
+
+    total_time = max(
+        p["completion_time"]
+        for p in results
+    )
+
+    throughput = (
+            completed_processes / total_time
+    )
+
+    return throughput
+
+def calculate_metrics(results):
+    """
+    Computes average scheduling metrics
+    """
+
+    n = len(results)
+
+    if n == 0:
+        return {
+            "avg_waiting_time": 0,
+            "avg_turnaround_time": 0,
+            "avg_response_time": 0
+        }
+
+    avg_wt = sum(p["waiting_time"] for p in results) / n
+    avg_tat = sum(p["turnaround_time"] for p in results) / n
+    avg_rt = sum(p["response_time"] for p in results) / n
+
+    return {
+        "avg_waiting_time": avg_wt,
+        "avg_turnaround_time": avg_tat,
+        "avg_response_time": avg_rt
+    }

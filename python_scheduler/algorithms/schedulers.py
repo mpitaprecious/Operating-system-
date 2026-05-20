@@ -4,24 +4,32 @@ from utils.pcb import update_process_state
 from utils.logger import log_event
 
 
-# first come, first served scheduling
+
+# FIRST COME, FIRST SERVED (FCFS)
+
 def fcfs(processes):
+
+    print("FCFS started")
+
     processes = sorted(
         processes,
-        key=lambda x: (x["arrival_time"], x["pid"])
+        key=lambda x: (
+            x["arrival_time"],
+            x["pid"]
+        )
     )
 
     time = 0
+
     results = []
+    gantt = []
 
     for process in processes:
-        print("FCFS started")
 
         # CPU idle handling
         if time < process["arrival_time"]:
             time = process["arrival_time"]
 
-        # Process enters RUNNING state
         update_process_state(process, "RUNNING")
 
         log_event(
@@ -38,7 +46,14 @@ def fcfs(processes):
 
         rt = start - process["arrival_time"]
 
-        # Process terminates
+        gantt.append(
+            (
+                process["pid"],
+                start,
+                completion
+            )
+        )
+
         update_process_state(process, "TERMINATED")
 
         log_event(
@@ -58,18 +73,27 @@ def fcfs(processes):
 
         time = completion
 
-    return results
+    return results, gantt
 
 
-# shortest job first scheduling
+# SHORTEST JOB FIRST (SJF)
+# NON-PREEMPTIVE
+
 def sjf(processes):
+
+    print("SJF started")
+
     processes = sorted(
         processes,
-        key=lambda x: (x["arrival_time"], x["pid"])
+        key=lambda x: (
+            x["arrival_time"],
+            x["pid"]
+        )
     )
 
     completed = []
     ready_queue = []
+    gantt = []
 
     time = 0
     index = 0
@@ -77,12 +101,19 @@ def sjf(processes):
 
     while len(completed) < n:
 
-        while index < n and processes[index]["arrival_time"] <= time:
+        while (
+                index < n
+                and processes[index]["arrival_time"] <= time
+        ):
             ready_queue.append(processes[index])
             index += 1
 
+        # CPU idle
         if not ready_queue:
-            time += 1
+
+            if index < n:
+                time = processes[index]["arrival_time"]
+
             continue
 
         ready_queue.sort(
@@ -95,12 +126,35 @@ def sjf(processes):
 
         process = ready_queue.pop(0)
 
+        update_process_state(process, "RUNNING")
+
+        log_event(
+            f"[TIME {time}] Process {process['pid']} entered RUNNING state"
+        )
+
         start = time
+
         completion = start + process["burst_time"]
 
         tat = completion - process["arrival_time"]
+
         wt = tat - process["burst_time"]
+
         rt = start - process["arrival_time"]
+
+        gantt.append(
+            (
+                process["pid"],
+                start,
+                completion
+            )
+        )
+
+        update_process_state(process, "TERMINATED")
+
+        log_event(
+            f"[TIME {completion}] Process {process['pid']} TERMINATED"
+        )
 
         completed.append({
             "pid": process["pid"],
@@ -110,23 +164,32 @@ def sjf(processes):
             "completion_time": completion,
             "turnaround_time": tat,
             "waiting_time": wt,
-            "response_time": rt
+            "response_time": rt,
+            "state": process["state"]
         })
 
         time = completion
 
-    return completed
+    return completed, gantt
 
+# PRIORITY SCHEDULING
+# NON-PREEMPTIVE WITH AGING
 
-# priority scheduling
 def priority_scheduling(processes):
+
+    print("Priority Scheduling started")
+
     processes = sorted(
         processes,
-        key=lambda x: (x["arrival_time"], x["pid"])
+        key=lambda x: (
+            x["arrival_time"],
+            x["pid"]
+        )
     )
 
     completed = []
     ready_queue = []
+    gantt = []
 
     time = 0
     index = 0
@@ -134,7 +197,11 @@ def priority_scheduling(processes):
 
     while len(completed) < n:
 
-        while index < n and processes[index]["arrival_time"] <= time:
+        while (
+                index < n
+                and processes[index]["arrival_time"] <= time
+        ):
+
             process = processes[index].copy()
 
             process["current_priority"] = process["priority"]
@@ -143,18 +210,30 @@ def priority_scheduling(processes):
 
             index += 1
 
+        # CPU idle
         if not ready_queue:
-            time += 1
+
+            if index < n:
+                time = processes[index]["arrival_time"]
+
             continue
 
+        # Aging mechanism
         for process in ready_queue:
+
             waiting_time = time - process["arrival_time"]
 
             ageing_steps = waiting_time // 3
 
-            improved_priority = process["priority"] - ageing_steps
+            improved_priority = (
+                    process["priority"]
+                    - ageing_steps
+            )
 
-            process["current_priority"] = max(0, improved_priority)
+            process["current_priority"] = max(
+                0,
+                improved_priority
+            )
 
         ready_queue.sort(
             key=lambda x: (
@@ -166,12 +245,35 @@ def priority_scheduling(processes):
 
         process = ready_queue.pop(0)
 
+        update_process_state(process, "RUNNING")
+
+        log_event(
+            f"[TIME {time}] Process {process['pid']} entered RUNNING state"
+        )
+
         start = time
+
         completion = start + process["burst_time"]
 
         tat = completion - process["arrival_time"]
+
         wt = tat - process["burst_time"]
+
         rt = start - process["arrival_time"]
+
+        gantt.append(
+            (
+                process["pid"],
+                start,
+                completion
+            )
+        )
+
+        update_process_state(process, "TERMINATED")
+
+        log_event(
+            f"[TIME {completion}] Process {process['pid']} TERMINATED"
+        )
 
         completed.append({
             "pid": process["pid"],
@@ -182,19 +284,28 @@ def priority_scheduling(processes):
             "completion_time": completion,
             "turnaround_time": tat,
             "waiting_time": wt,
-            "response_time": rt
+            "response_time": rt,
+            "state": process["state"]
         })
 
         time = completion
 
-    return completed
+    return completed, gantt
 
 
-# round robin scheduling
+# ROUND ROBIN (RR)
+# PREEMPTIVE
+
 def round_robin(processes, quantum=2):
+
+    print("Round Robin started")
+
     processes = sorted(
         processes,
-        key=lambda x: (x["arrival_time"], x["pid"])
+        key=lambda x: (
+            x["arrival_time"],
+            x["pid"]
+        )
     )
 
     queue = deque()
@@ -206,10 +317,13 @@ def round_robin(processes, quantum=2):
     results = []
 
     remaining = {}
+    first_response = {}
 
-    for p in processes:
-        print("RR started")
-        remaining[p["pid"]] = p["burst_time"]
+    for process in processes:
+
+        remaining[process["pid"]] = process["burst_time"]
+
+        first_response[process["pid"]] = None
 
     while queue or index < len(processes):
 
@@ -218,6 +332,7 @@ def round_robin(processes, quantum=2):
                 index < len(processes)
                 and processes[index]["arrival_time"] <= time
         ):
+
             process = processes[index]
 
             update_process_state(process, "READY")
@@ -232,7 +347,10 @@ def round_robin(processes, quantum=2):
 
         # CPU idle
         if not queue:
-            time += 1
+
+            if index < len(processes):
+                time = processes[index]["arrival_time"]
+
             continue
 
         process = queue.popleft()
@@ -244,6 +362,14 @@ def round_robin(processes, quantum=2):
         )
 
         start = time
+
+        # Store first response only once
+        if first_response[process["pid"]] is None:
+
+            first_response[process["pid"]] = (
+                    start
+                    - process["arrival_time"]
+            )
 
         execute = min(
             quantum,
@@ -262,11 +388,12 @@ def round_robin(processes, quantum=2):
             )
         )
 
-        # Add newly arrived processes during execution
+        # Add newly arrived processes
         while (
                 index < len(processes)
                 and processes[index]["arrival_time"] <= time
         ):
+
             new_process = processes[index]
 
             update_process_state(new_process, "READY")
@@ -294,10 +421,7 @@ def round_robin(processes, quantum=2):
                     - process["burst_time"]
             )
 
-            rt = (
-                    start
-                    - process["arrival_time"]
-            )
+            rt = first_response[process["pid"]]
 
             update_process_state(process, "TERMINATED")
 

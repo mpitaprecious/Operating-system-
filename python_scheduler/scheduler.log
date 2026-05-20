@@ -1,0 +1,6 @@
+[TIME 0] Process 1 entered RUNNING state
+[TIME 5] Process 1 TERMINATED
+[TIME 5] Process 2 entered RUNNING state
+[TIME 8] Process 2 TERMINATED
+[TIME 8] Process 3 entered RUNNING state
+[TIME 16] Process 3 TERMINATED
