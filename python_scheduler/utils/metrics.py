@@ -65,30 +65,34 @@ def print_results_table(results):
 
 # comparison function
 def compare_algorithms(comparison_data):
+
     from tabulate import tabulate
 
     table = []
 
     for row in comparison_data:
+
         table.append([
             row["Algorithm"],
-            f'{row["Average Waiting Time"]:.2f}',
-            f'{row["Average Turnaround Time"]:.2f}',
-            f'{row["Average Response Time"]:.2f}',
-            f'{row["CPU Utilisation"]:.2f}',
-            f'{row["Throughput"]:.2f}'
+            f'{row["avg_waiting_time"]:.2f}',
+            f'{row["avg_turnaround_time"]:.2f}',
+            f'{row["avg_response_time"]:.2f}'
         ])
 
     headers = [
         "Algorithm",
         "Avg WT",
         "Avg TAT",
-        "Avg RT",
-        "CPU %",
-        "Throughput"
+        "Avg RT"
     ]
 
-    print(tabulate(table, headers=headers, tablefmt="grid"))
+    print(
+        tabulate(
+            table,
+            headers=headers,
+            tablefmt="grid"
+        )
+    )
 
 
 def calculate_cpu_utilization(results):

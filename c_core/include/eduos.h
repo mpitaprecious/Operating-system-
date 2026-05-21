@@ -4,10 +4,12 @@
 #define MAX_PROCESSES 100
 
 typedef enum {
+
     READY,
     RUNNING,
     WAITING,
     TERMINATED
+
 } ProcessState;
 
 typedef struct {
@@ -26,6 +28,15 @@ typedef struct {
 
 } PCB;
 
+typedef struct {
+
+    PCB items[MAX_PROCESSES];
+
+    int front;
+    int rear;
+
+} Queue;
+
 void create_process(
     PCB *process,
     int pid,
@@ -37,5 +48,33 @@ void create_process(
 void display_process(
     PCB process
 );
+
+void fcfs(
+    PCB processes[],
+    int n
+);
+
+void init_queue(
+    Queue *q
+);
+
+int is_empty(
+    Queue *q
+);
+
+void enqueue(
+    Queue *q,
+    PCB process
+);
+
+PCB dequeue(
+    Queue *q
+);
+
+void* thread_function(
+    void *arg
+);
+
+void run_ipc_demo();
 
 #endif

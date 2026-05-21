@@ -2,23 +2,37 @@
 Assignment 1
 this is my first commit in github 
 its really amazing learning using github although its confusing at first
-name: Precious Mpita
-RegNo:25311351032
+
 
 # EduOS Simulator
-A sample operating system simulation built in Python and C that demonstrates process scheduling,threading and IPC concepts
+A sample operating system simulation built in Python and C that demonstrates process scheduling,
+threading and IPC concepts
+
+## name: Precious Mpita
+## RegNo:25311351032
+## module code: 351 CS 2104
+
 
 ## Features
--process scheduling (FCFS,Round Robin)
+-FCFS scheduling 
+-SJF scheduling
+-Priority Scheduler
+-Round Robin Scheduling
+-Process control block
+-Queue Management
 -Threading management simulation
+-Mutex Synchronization
+-Python + c Hybrid Architecture
 -IPC modules
 -Gantt chart visualization
 
-##Technologies used
+## Technologies used
 -Python
 -C
 -CSV for input data
 -Matplotlib for visualization
+-pthread 
+-GCC / MinGW
 
 ## Project structure
 C_core/

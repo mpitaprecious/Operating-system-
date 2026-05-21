@@ -7,18 +7,20 @@ import random
 import os
 
 from utils.pcb import ProcessControlBlock
-from utils.report import export_results
+from controller.main_controller import (
+    run_scheduler,
+    generate_summary,
+    export_and_visualize,
+    run_c_scheduler
+)
 
-from utils.metrices import (
+from utils.metrics import (
     calculate_averages,
     print_results_table,
-    compare_algorithms,
-    calculate_cpu_utilization,
-    calculate_throughput
+    compare_algorithms
 )
 
 from visualization.gantt import (
-    draw_gantt_chart,
     draw_comparison_chart
 )
 
@@ -35,11 +37,9 @@ open("scheduler.log", "w").close()
 
 # RANDOM PROCESS GENERATOR
 def generate_random_processes(n):
-
     processes = []
 
     for pid in range(1, n + 1):
-
         process = {
             "pid": pid,
             "arrival_time": random.randint(0, 10),
@@ -56,26 +56,34 @@ def generate_random_processes(n):
 # LOAD CSV FILE
 def load_processes_from_csv(filename):
     base_dir = os.path.dirname(__file__)
-    full_path = os.path.join(base_dir, filename)
+
+    full_path = os.path.join(
+        base_dir,
+        filename
+    )
+
+    print(full_path)
 
     processes = []
 
     with open(full_path, "r") as file:
-
         reader = csv.DictReader(file)
 
         for row in reader:
+            print(row)
 
-            process = ProcessControlBlock(
-                pid=row["pid"],
-                arrival_time=int(row["arrival_time"]),
-                burst_time=int(row["burst_time"]),
-                priority=int(row["priority"])
-            )
+            process = {
+                "pid": int(row["pid"]),
+                "arrival_time": int(row["arrival_time"]),
+                "burst_time": int(row["burst_time"]),
+                "priority": int(row["priority"]),
+                "state": "READY"
+            }
 
-            processes.append(process.to_dict())
+            processes.append(process)
 
     return processes
+
 
 # MAIN EXECUTION
 if __name__ == "__main__":
@@ -117,6 +125,12 @@ if __name__ == "__main__":
         help="Compare all scheduling algorithms"
     )
 
+    parser.add_argument(
+        "--c-run",
+        action="store_true",
+        help="Run C scheduler core"
+    )
+
     args = parser.parse_args()
 
     # LOAD PROCESSES
@@ -132,13 +146,23 @@ if __name__ == "__main__":
     else:
 
         processes = [
-            {"pid": 1,"arrival_time": 0,"burst_time": 5,"priority": 2,"state": "READY"},
-            {"pid": 2,"arrival_time": 1,"burst_time": 3,"priority": 1,"state": "READY"},
-            {"pid": 3,"arrival_time": 2,"burst_time": 8,"priority": 4,"state": "READY"}
+            {"pid": 1, "arrival_time": 0, "burst_time": 5, "priority": 2, "state": "READY"},
+            {"pid": 2, "arrival_time": 1, "burst_time": 3, "priority": 1, "state": "READY"},
+            {"pid": 3, "arrival_time": 2, "burst_time": 8, "priority": 4, "state": "READY"}
         ]
+
+    if args.c_run:
+        run_c_scheduler()
+
+        exit()
 
     # COMPARISON MODE
     if args.compare:
+
+        if args.c_run:
+            run_scheduler()
+            exit()
+
 
         comparison_data = []
 
@@ -149,88 +173,65 @@ if __name__ == "__main__":
         }
 
         for name, algorithm in algorithms.items():
+            results, _ = algorithm(processes)
 
-            results = algorithm(processes)
+            metrics = calculate_averages(results)
 
-            metrices = calculate_averages(results)
+            metrics["Algorithm"] = name
 
-            metrices["Algorithm"] = name
-
-            comparison_data.append(metrices)
+            comparison_data.append(metrics)
 
         rr_results, _ = round_robin(
             processes,
             args.quantum
         )
 
-        rr_metrices = calculate_averages(rr_results)
+        rr_metrics = calculate_averages(rr_results)
 
-        rr_metrices["Algorithm"] = "Round Robin"
+        rr_metrics["Algorithm"] = "Round Robin"
 
-        comparison_data.append(rr_metrices)
+        comparison_data.append(rr_metrics)
+
+        print(comparison_data)
 
         compare_algorithms(comparison_data)
 
         draw_comparison_chart(comparison_data)
 
+        # SINGLE ALGORITHM MODE
+
     # SINGLE ALGORITHM MODE
     else:
 
-        gantt = []
+        results, gantt = run_scheduler(
+            args.algorithm,
+            processes,
+            args.quantum
+        )
 
-        if args.algorithm == "fcfs":
-
-            results,gantt = fcfs(processes)
-
-        elif args.algorithm == "sjf":
-
-            results,gantt = sjf(processes)
-
-        elif args.algorithm == "priority":
-
-            results,gantt = priority_scheduling(processes)
-
-        elif args.algorithm == "rr":
-
-            results, gantt = round_robin(
-                processes,
-                args.quantum
-            )
-
-        else:
-
-            print("Invalid algorithm")
-            exit()
-
-        # PRINT RESULTS
         print_results_table(results)
 
-        # EXPORT REPORT
-        export_results(results)
+        summary_data = generate_summary(results)
 
-        # SUMMARY METRICS
-        summary = calculate_averages(results)
+        export_and_visualize(
+            results,
+            gantt
+        )
 
         print("\n=== SUMMARY METRICS ===")
 
-        for key, value in summary.items():
-
+        for key, value in summary_data[
+            "summary"
+        ].items():
             print(f"{key}: {value:.2f}")
 
-        # CPU UTILIZATION
-        cpu_util = calculate_cpu_utilization(results)
-
-        print(f"\nCPU Utilization: {cpu_util:.2f}%")
-
-        # THROUGHPUT
-        throughput = calculate_throughput(results)
+        print(
+            f"\nCPU Utilization: "
+            f"{summary_data['cpu_utilization']:.2f}%"
+        )
 
         print(
             f"Throughput: "
-            f"{throughput:.2f} processes/unit time"
+            f"{summary_data['throughput']:.2f} "
+            f"processes/unit time"
         )
-
-        # GANTT CHART
-        if gantt:
-
-            draw_gantt_chart(gantt)

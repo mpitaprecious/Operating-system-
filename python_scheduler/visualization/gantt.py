@@ -56,30 +56,56 @@ def draw_gantt_chart(gantt):
 # comparison_visualizer
 def draw_comparison_chart(comparison_data):
 
-
+    import matplotlib.pyplot as plt
 
     algorithms = [
         row["Algorithm"]
         for row in comparison_data
     ]
 
-    avg_wt = [
-        row["Average Waiting Time"]
+    waiting_times = [
+        row["avg_waiting_time"]
         for row in comparison_data
     ]
 
-    plt.figure(figsize=(10, 6))
+    turnaround_times = [
+        row["avg_turnaround_time"]
+        for row in comparison_data
+    ]
 
-    plt.bar(algorithms, avg_wt)
+    plt.figure(figsize=(10, 5))
+
+    x = range(len(algorithms))
+
+    plt.bar(
+        x,
+        waiting_times,
+        width=0.4,
+        label="Waiting Time"
+    )
+
+    plt.bar(
+        [i + 0.4 for i in x],
+        turnaround_times,
+        width=0.4,
+        label="Turnaround Time"
+    )
+
+    plt.xticks(
+        [i + 0.2 for i in x],
+        algorithms
+    )
 
     plt.xlabel("Algorithms")
 
-    plt.ylabel("Average Waiting Time")
+    plt.ylabel("Time")
 
-    plt.title("Scheduling Algorithm Comparison")
+    plt.title(
+        "Scheduling Algorithm Comparison"
+    )
 
-    plt.grid(axis='y')
+    plt.legend()
 
-    plt.savefig("algorithm_comparison.png")
+    plt.tight_layout()
 
     plt.show()

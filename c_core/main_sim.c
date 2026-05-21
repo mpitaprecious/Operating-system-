@@ -1,19 +1,14 @@
 #include <stdio.h>
+
 #include "include/eduos.h"
 
 int main() {
 
-    PCB p1;
-
-    create_process(
-        &p1,
-        1,
-        0,
-        5,
-        2
+    printf(
+        "\n=== IPC DEMO ===\n\n"
     );
 
-    display_process(p1);
+    run_ipc_demo();
 
     return 0;
 }
