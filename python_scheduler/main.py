@@ -163,7 +163,6 @@ if __name__ == "__main__":
             run_scheduler()
             exit()
 
-
         comparison_data = []
 
         algorithms = {

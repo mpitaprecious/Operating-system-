@@ -47,11 +47,42 @@ README.md
 3.Run main file:
    python controller/main_controller.py
 
-## Run 
-   python python_scheduler/scheduler_sim.py
 
 ## output
 example for gantt and bar chart
 ![Figure 1 5_17_2026 9_41_40 PM.png](docs/screenshots/Figure%201%205_17_2026%209_41_40%20PM.png)
 ![scheduling algorithm comparison.png](docs/screenshots/scheduling%20algorithm%20comparison.png)
 
+## Race Condition Demonstration
+
+Two versions were implemented:
+
+- race_demo.c → demonstrates unsafe shared counter access
+- fixed_demo.c → demonstrates mutex-protected synchronization
+
+The race version produces inconsistent counter values due to concurrent access,
+while the fixed version consistently produces the correct result.
+
+## Running Python Scheduler
+
+cd python_scheduler
+
+python main.py --algorithm fcfs --file sample_processes.csv
+
+## Running Comparison Mode
+
+python main.py --compare --file sample_processes.csv
+
+## Running C Core
+
+python main.py --c-run
+
+
+## Bonus Features
+
+- IPC module
+- Mutex synchronization
+- Python/C hybrid architecture
+
+## Report
+[Project Report](docs/report.pdf)
