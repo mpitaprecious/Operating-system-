@@ -5,7 +5,8 @@ class ProcessControlBlock:
         pid,
         arrival_time,
         burst_time,
-        priority=0
+        priority=0,
+
     ):
 
         self.pid = pid

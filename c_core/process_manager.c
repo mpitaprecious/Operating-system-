@@ -192,6 +192,7 @@ void edu_wait(
     printf(
         "[WAIT] Parent process %d is waiting for child process %d\n",
         parent_pid,
+        parent_pid,
         child_pid
     );
 

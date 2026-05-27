@@ -1,12 +1,8 @@
 # Operating-system-
-Assignment 1
-this is my first commit in github 
-its really amazing learning using github although its confusing at first
-
 
 # EduOS Simulator
 A sample operating system simulation built in Python and C that demonstrates process scheduling,
-threading and IPC concepts
+gthreading and IPC concepts
 
 ## name: Precious Mpita
 ## RegNo:25311351032
@@ -120,6 +116,10 @@ The project demonstrates:
 | Synchronization | Mutex locks             | fixed_demo.c     |
 | Deadlock        | Deadlock scenario       | deadlock_demo.c  |
 
+## simulation_report.json
+simulation_report.json stores scheduler performance metrics generated during 
+algorithm comparison mode.
+
 
 ## Race Condition Demonstration
 
@@ -153,6 +153,8 @@ gcc deadlock_demo.c -o deadlock_demo -lpthread
 gcc deadlock_fixed.c -o deadlock_fixed -lpthread
 .\deadlock_fixed.c 
 
+## controller
+-python main_controller.py
 
 ## IPC and Shared Memory
 
@@ -181,7 +183,7 @@ docs/screenshots/
 * Python module imports
 * Windows compatibility for shared memory
 * Thread synchronization bugs
-* indentation  
+* indentation issues 
 
 ## Conclusion
 

@@ -1,0 +1,25 @@
+{
+    "FCFS": {
+        "avg_waiting_time": 3.33,
+        "avg_turnaround_time": 8.67,
+        "avg_response_time": 3.33
+    },
+
+    "SJF": {
+        "avg_waiting_time": 2.50,
+        "avg_turnaround_time": 7.20,
+        "avg_response_time": 2.50
+    },
+
+    "Priority": {
+        "avg_waiting_time": 4.10,
+        "avg_turnaround_time": 9.00,
+        "avg_response_time": 4.10
+    },
+
+    "Round Robin": {
+        "avg_waiting_time": 5.00,
+        "avg_turnaround_time": 10.00,
+        "avg_response_time": 5.00
+    }
+}
